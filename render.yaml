@@ -5,7 +5,7 @@ services:
     plan: free
     region: frankfurt
     rootDir: api
-    buildCommand: npm ci && npm run build && npm run prisma:deploy
+    buildCommand: npm ci --include=dev && npm run build && npm run prisma:deploy
     startCommand: npm start
     healthCheckPath: /health
     autoDeploy: true
