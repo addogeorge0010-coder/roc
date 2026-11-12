@@ -1,13 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   RefreshControl,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -72,6 +72,9 @@ export default function MediaScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "recent">("all");
 
   const loadSermons = useCallback(async () => {
     try {
@@ -108,12 +111,34 @@ export default function MediaScreen() {
     void loadSermons();
   }, [loadSermons]);
 
+  const filteredSermons = useMemo(() => {
+    const value = query.trim().toLowerCase();
+    const newest = sermons.reduce(
+      (latest, sermon) =>
+        Math.max(latest, new Date(sermon.datePreached).getTime()),
+      0,
+    );
+    const cutoff =
+      filter === "recent" && newest > 0
+        ? newest - 30 * 24 * 60 * 60 * 1000
+        : null;
+
+    return sermons.filter((sermon) => {
+      const matchesQuery =
+        !value || sermon.title.toLowerCase().includes(value);
+      const matchesFilter =
+        cutoff === null || new Date(sermon.datePreached).getTime() >= cutoff;
+
+      return matchesQuery && matchesFilter;
+    });
+  }, [filter, query, sermons]);
+
   const cardWidth = Math.min(width, 720) - 40;
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-slate-50">
       <FlatList
-        data={sermons}
+        data={filteredSermons}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{
           paddingHorizontal: 20,
@@ -140,17 +165,17 @@ export default function MediaScreen() {
               right={
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Search sermons"
-                  onPress={() =>
-                    Alert.alert(
-                      "Search sermons",
-                      "Search and filters will be connected to the backend soon.",
-                    )
+                  accessibilityLabel={
+                    searchOpen ? "Close sermon search" : "Search sermons"
                   }
+                  onPress={() => {
+                    setSearchOpen((current) => !current);
+                    if (searchOpen) setQuery("");
+                  }}
                   className="mt-1 h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white"
                 >
                   <Ionicons
-                    name="search"
+                    name={searchOpen ? "close" : "search"}
                     size={20}
                     color={theme.colors.text}
                   />
@@ -158,22 +183,76 @@ export default function MediaScreen() {
               }
             />
 
+            {searchOpen ? (
+              <View className="mb-3 mt-3 flex-row items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4">
+                <Ionicons
+                  name="search"
+                  size={18}
+                  color={theme.colors.muted}
+                />
+                <TextInput
+                  className="flex-1 py-3 text-sm text-slate-800"
+                  placeholder="Search sermons by title"
+                  placeholderTextColor={theme.colors.muted}
+                  value={query}
+                  onChangeText={setQuery}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoFocus
+                />
+                {query ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Clear search"
+                    onPress={() => setQuery("")}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={18}
+                      color={theme.colors.muted}
+                    />
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
+
             <View className="mb-4 mt-3 flex-row gap-2">
-              <View className="rounded-full bg-brand-600 px-3 py-1.5">
-                <Text className="text-xs font-semibold text-white">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Show all messages"
+                onPress={() => setFilter("all")}
+                className={`rounded-full px-3 py-1.5 ${
+                  filter === "all"
+                    ? "bg-brand-600"
+                    : "border border-slate-200 bg-white"
+                }`}
+              >
+                <Text
+                  className={`text-xs font-semibold ${
+                    filter === "all" ? "text-white" : "text-slate-500"
+                  }`}
+                >
                   All messages
                 </Text>
-              </View>
-              <View className="rounded-full border border-slate-200 bg-white px-3 py-1.5">
-                <Text className="text-xs font-semibold text-slate-500">
-                  Series
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Show recent messages"
+                onPress={() => setFilter("recent")}
+                className={`rounded-full px-3 py-1.5 ${
+                  filter === "recent"
+                    ? "bg-brand-600"
+                    : "border border-slate-200 bg-white"
+                }`}
+              >
+                <Text
+                  className={`text-xs font-semibold ${
+                    filter === "recent" ? "text-white" : "text-slate-500"
+                  }`}
+                >
+                  Recent
                 </Text>
-              </View>
-              <View className="rounded-full border border-slate-200 bg-white px-3 py-1.5">
-                <Text className="text-xs font-semibold text-slate-500">
-                  Speakers
-                </Text>
-              </View>
+              </Pressable>
             </View>
 
             {error && sermons.length > 0 ? (
@@ -236,6 +315,33 @@ export default function MediaScreen() {
                 </Text>
               </Pressable>
             </View>
+          ) : sermons.length > 0 ? (
+            <View className="items-center rounded-3xl border border-slate-100 bg-white px-6 py-10">
+              <Ionicons
+                name="search-outline"
+                size={30}
+                color={theme.colors.muted}
+              />
+              <Text className="mt-3 text-base font-semibold text-slate-800">
+                No matching sermons
+              </Text>
+              <Text className="mt-1 text-center text-sm leading-5 text-slate-500">
+                Try a different search or show all messages.
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Reset sermon filters"
+                onPress={() => {
+                  setQuery("");
+                  setFilter("all");
+                }}
+                className="mt-4 rounded-full bg-brand-600 px-5 py-2.5"
+              >
+                <Text className="text-sm font-semibold text-white">
+                  Reset filters
+                </Text>
+              </Pressable>
+            </View>
           ) : (
             <View className="items-center rounded-3xl border border-slate-100 bg-white px-6 py-10">
               <Ionicons
@@ -255,7 +361,7 @@ export default function MediaScreen() {
           )
         }
         ListFooterComponent={
-          sermons.length > 0 ? (
+          filteredSermons.length > 0 ? (
             <Text className="mt-5 text-center text-xs text-slate-400">
               New messages are added every Sunday
             </Text>

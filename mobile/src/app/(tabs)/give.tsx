@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState, type ComponentProps } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,8 +18,16 @@ import { ScreenHeader } from "@/components/ScreenHeader";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { theme } from "@/constants/theme";
 import { quickGivingAmounts } from "@/data/mock";
+import { ApiError, apiRequest } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import type { PaymentMethod } from "@/types";
+
+interface DonationReceipt {
+  amount: number;
+  method: PaymentMethod;
+  transactionReference: string;
+  status: string;
+}
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -83,6 +92,8 @@ export default function GiveScreen() {
   const [method, setMethod] = useState<PaymentMethod>("momo");
   const [amountError, setAmountError] = useState<string>();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [receipt, setReceipt] = useState<DonationReceipt | null>(null);
 
   const amountValue = Number.parseFloat(amount) || 0;
 
@@ -91,17 +102,52 @@ export default function GiveScreen() {
     if (amountError) setAmountError(undefined);
   };
 
-  const handleGive = () => {
+  const handleGive = async () => {
     if (!Number.isFinite(amountValue) || amountValue <= 0) {
       setAmountError("Enter an amount greater than zero.");
       return;
     }
 
-    setShowSuccess(true);
+    if (submitting) {
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const donation = await apiRequest<{
+        amount: string;
+        method: "MOBILE_MONEY" | "CARD";
+        status: string;
+        transactionReference: string;
+      }>("/api/donations/initiate", {
+        method: "POST",
+        body: {
+          amount: amountValue,
+          method: method === "momo" ? "MOBILE_MONEY" : "CARD",
+        },
+      });
+
+      setReceipt({
+        amount: Number(donation.amount),
+        method,
+        status: donation.status,
+        transactionReference: donation.transactionReference,
+      });
+      setShowSuccess(true);
+    } catch (err) {
+      Alert.alert(
+        "Couldn't record your gift",
+        err instanceof ApiError ? err.message : "Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const closeSuccess = () => {
     setShowSuccess(false);
+    setReceipt(null);
     setAmount("");
     setAmountError(undefined);
   };
@@ -254,8 +300,8 @@ export default function GiveScreen() {
                 color={theme.colors.muted}
               />
               <Text className="flex-1 text-[11px] leading-4 text-slate-500">
-                Secure giving powered by Hubtel & Paystack. Payment processing
-                will be connected after launch.
+                Your gift is recorded securely and confirmed by the church
+                finance team.
               </Text>
             </View>
           </View>
@@ -263,7 +309,8 @@ export default function GiveScreen() {
           <PrimaryButton
             label="Give now"
             icon="heart"
-            onPress={handleGive}
+            onPress={() => void handleGive()}
+            loading={submitting}
             disabled={amountValue <= 0}
             className="mt-5"
           />
@@ -294,22 +341,31 @@ export default function GiveScreen() {
               <Text className="mt-2 text-center text-sm leading-6 text-slate-500">
                 Your gift of{" "}
                 <Text className="font-bold text-slate-800">
-                  {formatCurrency(amountValue)}
+                  {formatCurrency(receipt?.amount ?? amountValue)}
                 </Text>{" "}
-                has been received. May God bless you abundantly.
+                has been recorded and is pending confirmation. May God bless
+                you abundantly.
               </Text>
 
               <View className="mt-4 w-full rounded-2xl bg-slate-50 p-4">
                 <View className="flex-row items-center justify-between">
                   <Text className="text-xs text-slate-500">Method</Text>
                   <Text className="text-xs font-semibold text-slate-800">
-                    {method === "momo" ? "Mobile Money" : "Card"}
+                    {(receipt?.method ?? method) === "momo"
+                      ? "Mobile Money"
+                      : "Card"}
+                  </Text>
+                </View>
+                <View className="mt-2 flex-row items-center justify-between">
+                  <Text className="text-xs text-slate-500">Status</Text>
+                  <Text className="text-xs font-semibold text-amber-600">
+                    Pending confirmation
                   </Text>
                 </View>
                 <View className="mt-2 flex-row items-center justify-between">
                   <Text className="text-xs text-slate-500">Reference</Text>
                   <Text className="text-xs font-semibold text-slate-800">
-                    RPC-DEMO-0001
+                    {receipt?.transactionReference ?? "—"}
                   </Text>
                 </View>
               </View>

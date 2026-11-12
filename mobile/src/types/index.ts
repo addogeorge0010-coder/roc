@@ -92,6 +92,13 @@ export interface SermonRecord {
   youtubeVideoId: string;
   datePreached: string;
   createdAt: string;
+  isSaved?: boolean;
+  savedAt?: string;
+}
+
+export interface NotificationPreferences {
+  notifyAnnouncements: boolean;
+  notifySermons: boolean;
 }
 
 export type PaymentMethod = "momo" | "card";

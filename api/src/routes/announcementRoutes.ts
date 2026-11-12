@@ -2,6 +2,8 @@ import { Router } from "express";
 import {
   createAnnouncement,
   createAnnouncementComment,
+  deleteAnnouncement,
+  deleteAnnouncementComment,
   getAnnouncement,
   listAnnouncementComments,
   listAnnouncements,
@@ -44,4 +46,16 @@ announcementRouter.post(
   requireAdmin,
   validateBody(createAnnouncementSchema),
   createAnnouncement,
+);
+announcementRouter.delete(
+  "/:id",
+  authMiddleware,
+  requireAdmin,
+  deleteAnnouncement,
+);
+announcementRouter.delete(
+  "/:id/comments/:commentId",
+  authMiddleware,
+  requireAdmin,
+  deleteAnnouncementComment,
 );

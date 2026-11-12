@@ -28,6 +28,7 @@ export default function SermonDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const loadSermon = useCallback(async () => {
     if (!id) {
@@ -126,6 +127,31 @@ export default function SermonDetailScreen() {
     });
   };
 
+  const handleToggleSave = async () => {
+    if (!sermon || saving) {
+      return;
+    }
+
+    const nextSaved = !sermon.isSaved;
+
+    setSermon({ ...sermon, isSaved: nextSaved });
+    setSaving(true);
+
+    try {
+      await apiRequest(`/api/sermons/${sermon.id}/save`, {
+        method: nextSaved ? "POST" : "DELETE",
+      });
+    } catch (err) {
+      setSermon({ ...sermon, isSaved: !nextSaved });
+      Alert.alert(
+        "Couldn't update saved messages",
+        err instanceof ApiError ? err.message : "Please try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-slate-50">
       <ScrollView
@@ -168,15 +194,11 @@ export default function SermonDetailScreen() {
               className="flex-1"
             />
             <PrimaryButton
-              label="Save"
-              icon="bookmark-outline"
+              label={sermon.isSaved ? "Saved" : "Save"}
+              icon={sermon.isSaved ? "bookmark" : "bookmark-outline"}
               variant="secondary"
-              onPress={() =>
-                Alert.alert(
-                  "Saved",
-                  "Sermon bookmarks will be connected to your account soon.",
-                )
-              }
+              loading={saving}
+              onPress={() => void handleToggleSave()}
               className="flex-1"
             />
           </View>

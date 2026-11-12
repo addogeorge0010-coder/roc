@@ -15,7 +15,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { PostCard } from "@/components/PostCard";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -41,6 +44,7 @@ function toPost(announcement: Announcement): Post {
 
 export default function DepartmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
   const isAdmin = useAuthStore((state) => state.user?.role === "admin");
 
   const [department, setDepartment] = useState<Department | null>(null);
@@ -458,8 +462,11 @@ export default function DepartmentDetailScreen() {
               params: { departmentId: department.id },
             })
           }
-          className="absolute bottom-6 right-5 h-14 w-14 items-center justify-center rounded-full bg-brand-600"
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+          className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-brand-600"
+          style={({ pressed }) => ({
+            bottom: Math.max(insets.bottom, 24),
+            opacity: pressed ? 0.85 : 1,
+          })}
         >
           <Ionicons name="add" size={30} color="#FFFFFF" />
         </Pressable>

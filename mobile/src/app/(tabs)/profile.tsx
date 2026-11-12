@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
@@ -18,6 +19,14 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { theme } from "@/constants/theme";
 import { adminTools } from "@/data/mock";
 import { useAuthStore } from "@/store/authStore";
+
+const adminToolRoutes: Record<string, string> = {
+  "admin-announcements": "/create-announcement",
+  "admin-sermons": "/create-sermon",
+  "admin-moderation": "/admin/moderation",
+  "admin-members": "/admin/members",
+  "admin-giving": "/admin/giving",
+};
 
 export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
@@ -113,22 +122,15 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="notifications-outline"
             title="Notifications"
-            subtitle="Announcements and reminders"
-            onPress={() =>
-              Alert.alert(
-                "Notifications",
-                "Notification preferences are coming soon.",
-              )
-            }
+            subtitle="Announcements and new sermons"
+            onPress={() => router.push("/notifications")}
           />
           <View className="ml-16 h-px bg-slate-100" />
           <SettingsRow
             icon="bookmark-outline"
             title="Saved messages"
             subtitle="Your bookmarked sermons"
-            onPress={() =>
-              Alert.alert("Saved messages", "Saving sermons is coming soon.")
-            }
+            onPress={() => router.push("/saved-sermons")}
           />
           <View className="ml-16 h-px bg-slate-100" />
           <SettingsRow
@@ -190,12 +192,13 @@ export default function ProfileScreen() {
                   {adminTools.map((tool) => (
                     <Pressable
                       key={tool.id}
-                      onPress={() =>
-                        Alert.alert(
-                          tool.title,
-                          "This admin tool will be connected to the backend after launch.",
-                        )
-                      }
+                      onPress={() => {
+                        const route = adminToolRoutes[tool.id];
+
+                        if (route) {
+                          router.push(route);
+                        }
+                      }}
                       accessibilityRole="button"
                       accessibilityLabel={tool.title}
                       className="flex-row items-center rounded-xl px-3 py-3"

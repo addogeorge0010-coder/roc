@@ -32,11 +32,15 @@ model User {
   role          Role           @default(MEMBER)
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
+  notifyAnnouncements  Boolean            @default(true) @map("notify_announcements")
+  notifySermons        Boolean            @default(true) @map("notify_sermons")
   announcements        Announcement[]
   donations            Donation[]
   departments          Department[]
   announcementLikes    AnnouncementLike[]
   announcementComments AnnouncementComment[]
+  savedSermons         SermonSave[]
+  pushTokens           PushToken[]
 
   @@map("users")
 }
@@ -99,14 +103,41 @@ model AnnouncementComment {
 }
 
 model Sermon {
-  id             String   @id @default(uuid()) @db.Uuid
+  id             String       @id @default(uuid()) @db.Uuid
   title          String
-  youtubeVideoId String   @map("youtube_video_id")
-  datePreached   DateTime @map("date_preached")
-  createdAt      DateTime @default(now()) @map("created_at")
+  youtubeVideoId String       @map("youtube_video_id")
+  datePreached   DateTime     @map("date_preached")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  saves          SermonSave[]
 
   @@index([datePreached(sort: Desc)])
   @@map("sermons")
+}
+
+model SermonSave {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  sermonId  String   @map("sermon_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sermon    Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sermonId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("sermon_saves")
+}
+
+model PushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_tokens")
 }
 
 model Donation {

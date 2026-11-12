@@ -10,7 +10,10 @@
     "backgroundColor": "#F8FAFC",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "church.rpc.app"
+      "bundleIdentifier": "church.rpc.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "church.rpc.app",
@@ -31,7 +34,25 @@
       "expo-status-bar",
       "expo-image",
       "expo-font",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#4F46E5",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "9e7ab935-617b-45ed-bcd9-04d283cf9df5"
+      }
+    },
+    "owner": "georgeaddo"
   }
 }

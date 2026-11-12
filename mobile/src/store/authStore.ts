@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import { create } from "zustand";
 
 import { apiRequest, configureAuthBridge } from "@/lib/api";
+import { unregisterPushNotifications } from "@/lib/push";
 import type { User, UserRole } from "@/types";
 
 const SESSION_KEY = "rpc.session";
@@ -181,6 +182,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     const { sessionToken } = get();
+
+    await unregisterPushNotifications();
 
     if (sessionToken) {
       await apiRequest("/api/auth/logout", {

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Linking,
   Pressable,
   RefreshControl,
   Share,
@@ -199,13 +200,8 @@ export default function HomeScreen() {
               <View className="flex-row items-center gap-3">
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Notifications"
-                  onPress={() =>
-                    Alert.alert(
-                      "Notifications",
-                      "You're all caught up. New updates will appear here.",
-                    )
-                  }
+                  accessibilityLabel="Notification settings"
+                  onPress={() => router.push("/notifications")}
                   className="h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white"
                 >
                   <Ionicons
@@ -213,7 +209,6 @@ export default function HomeScreen() {
                     size={21}
                     color={theme.colors.text}
                   />
-                  <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-gold-500" />
                 </Pressable>
 
                 <Avatar name={user?.name ?? "Guest"} size={44} />
@@ -244,12 +239,11 @@ export default function HomeScreen() {
                 </Text>
 
                 <Pressable
-                  onPress={() =>
-                    Alert.alert(
-                      "Directions",
-                      "Directions and live-stream links will be available once the backend is connected.",
-                    )
-                  }
+                  onPress={() => {
+                    void Linking.openURL(
+                      "https://www.google.com/maps/search/?api=1&query=Royal+Palace+Chapel+Assemblies+of+God",
+                    );
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel="Get directions to Sunday service"
                   className="mt-4 flex-row items-center gap-2 self-start rounded-full bg-white px-4 py-2"
@@ -292,12 +286,7 @@ export default function HomeScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="See all updates"
-                onPress={() =>
-                  Alert.alert(
-                    "All updates",
-                    "The full announcements archive will be available soon.",
-                  )
-                }
+                onPress={() => router.push("/announcements")}
               >
                 <Text className="text-sm font-semibold text-brand-600">
                   See all

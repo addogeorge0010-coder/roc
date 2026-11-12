@@ -151,15 +151,21 @@ export const adminTools = [
     icon: "megaphone-outline" as const,
   },
   {
+    id: "admin-sermons",
+    title: "Post a sermon",
+    description: "Add a new message to the media library",
+    icon: "videocam-outline" as const,
+  },
+  {
     id: "admin-moderation",
     title: "Moderate the feed",
-    description: "Review flagged posts and comments",
+    description: "Remove inappropriate posts",
     icon: "shield-checkmark-outline" as const,
   },
   {
     id: "admin-members",
     title: "Member directory",
-    description: "View and manage member profiles",
+    description: "View member profiles",
     icon: "people-outline" as const,
   },
   {

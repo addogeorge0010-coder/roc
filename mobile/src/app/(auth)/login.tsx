@@ -159,7 +159,7 @@ export default function LoginScreen() {
                   onPress={() =>
                     Alert.alert(
                       "Reset password",
-                      "Password reset will be connected to the backend soon.",
+                      "Contact the church office at hello@rpc.church and we'll help you reset your password.",
                     )
                   }
                 >

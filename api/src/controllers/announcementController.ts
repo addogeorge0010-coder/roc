@@ -3,6 +3,7 @@ import { prisma } from "../prisma/client.js";
 import { HttpError } from "../utils/httpError.js";
 import { parseLimit } from "../utils/query.js";
 import { isUuid } from "../utils/uuid.js";
+import { sendPushNotification } from "../services/push.js";
 import type {
   CreateAnnouncementInput,
   CreateCommentInput,
@@ -138,7 +139,62 @@ export async function createAnnouncement(
     include: buildAnnouncementInclude(author.id),
   });
 
+  void sendPushNotification({
+    title: "New announcement",
+    body: announcement.title,
+    url: `/announcement/${announcement.id}`,
+    preference: "notifyAnnouncements",
+  }).catch(() => undefined);
+
   res.status(201).json(withLiked(announcement));
+}
+
+export async function deleteAnnouncement(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = requireAnnouncementId(req.params.id);
+
+  const announcement = await prisma.announcement.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+
+  if (!announcement) {
+    throw new HttpError(404, "Announcement not found");
+  }
+
+  await prisma.announcement.delete({ where: { id } });
+
+  res.status(204).send();
+}
+
+export async function deleteAnnouncementComment(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const announcementId = requireAnnouncementId(req.params.id);
+  const commentId = req.params.commentId;
+
+  if (!isUuid(commentId)) {
+    throw new HttpError(404, "Comment not found");
+  }
+
+  const comment = await prisma.announcementComment.findFirst({
+    where: {
+      id: commentId,
+      announcementId,
+    },
+    select: { id: true },
+  });
+
+  if (!comment) {
+    throw new HttpError(404, "Comment not found");
+  }
+
+  await prisma.announcementComment.delete({ where: { id: commentId } });
+
+  res.status(204).send();
 }
 
 export async function toggleAnnouncementLike(

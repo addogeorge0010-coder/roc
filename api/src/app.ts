@@ -6,10 +6,12 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./middlewares/errorHandler.js";
+import { adminRouter } from "./routes/adminRoutes.js";
 import { announcementRouter } from "./routes/announcementRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { departmentRouter } from "./routes/departmentRoutes.js";
 import { donationRouter } from "./routes/donationRoutes.js";
+import { notificationRouter } from "./routes/notificationRoutes.js";
 import { sermonRouter } from "./routes/sermonRoutes.js";
 
 export const app = express();
@@ -44,6 +46,8 @@ app.use("/api/announcements", announcementRouter);
 app.use("/api/departments", departmentRouter);
 app.use("/api/sermons", sermonRouter);
 app.use("/api/donations", donationRouter);
+app.use("/api/notifications", notificationRouter);
+app.use("/api/admin", adminRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
