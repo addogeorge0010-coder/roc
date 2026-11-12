@@ -118,8 +118,11 @@ export default function NotificationsScreen() {
           "Allow notifications for this app in your device settings, then try again.",
         );
       }
-    } catch {
-      Alert.alert("Couldn't enable notifications", "Please try again.");
+    } catch (err) {
+      Alert.alert(
+        "Couldn't enable notifications",
+        err instanceof Error ? err.message : "Please try again.",
+      );
     } finally {
       setRegistering(false);
     }

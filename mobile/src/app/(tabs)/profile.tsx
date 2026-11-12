@@ -219,11 +219,11 @@ export default function ProfileScreen() {
                           {tool.description}
                         </Text>
                       </View>
-                      <View className="rounded-full bg-slate-200/80 px-2 py-0.5">
-                        <Text className="text-[10px] font-bold uppercase text-slate-500">
-                          Soon
-                        </Text>
-                      </View>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={16}
+                        color={theme.colors.muted}
+                      />
                     </Pressable>
                   ))}
                 </View>
